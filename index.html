@@ -70,6 +70,16 @@
   .panel .hint{font-style:italic;color:var(--mut);font-size:14px;}
 
   footer{margin-top:30px;border-top:1px solid var(--line);padding-top:18px;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--mut);line-height:1.8;}
+
+  .likebar{position:fixed;right:20px;bottom:20px;z-index:40;display:inline-flex;align-items:center;gap:9px;
+    background:rgba(14,20,31,.82);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:40px;
+    padding:11px 17px;cursor:pointer;font-family:"JetBrains Mono",monospace;font-size:13px;color:var(--ink);transition:transform .1s,border-color .2s;}
+  .likebar:hover{border-color:#FF5E7E;} .likebar:active{transform:scale(.92);}
+  .likebar .hh{color:#FF5E7E;font-size:18px;line-height:1;transition:transform .18s;}
+  .likebar.pop .hh{transform:scale(1.5);}
+  .likebar .cnt{min-width:1ch;font-variant-numeric:tabular-nums;}
+  .hearts{position:fixed;inset:0;z-index:39;pointer-events:none;overflow:hidden;}
+  .fh{position:fixed;will-change:transform,opacity;}
 </style>
 </head>
 <body>
@@ -108,6 +118,9 @@
     In memory of Cleve Barry Moler, 1939–2026 — who made the matrix easy.
   </footer>
 </div>
+
+<button class="likebar" id="likebar" aria-label="Leave a heart"><span class="hh">&#9829;</span><span class="cnt" id="cnt">0</span></button>
+<div class="hearts" id="hearts"></div>
 
 <script>
 const nodes = {
@@ -252,6 +265,37 @@ const chip = id => `<button class="chip" data-id="${id}">${nodes[id].t}</button>
 window.addEventListener("resize", draw);
 window.addEventListener("load", () => { draw(); setActive(pinned, true); });
 draw(); setActive(pinned, true);
+
+/* ---- hearts + shared Abacus counter (shared with the mobile tribute) ---- */
+const store = { get(k){try{return localStorage.getItem(k);}catch(e){return null;}}, set(k,v){try{localStorage.setItem(k,v);}catch(e){}} };
+const ABACUS = "https://abacus.jasoncameron.dev", ABACUS_NS = "cleve-moler-tribute", ABACUS_KEY = "hearts";
+let hcount = parseInt(store.get("cleve_hearts") || "0", 10);
+const cntEl = document.getElementById("cnt"), likebar = document.getElementById("likebar"), heartsLayer = document.getElementById("hearts");
+const reduceM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+cntEl.textContent = hcount;
+function showCount(n){ hcount = n; cntEl.textContent = n; store.set("cleve_hearts", String(n)); }
+fetch(`${ABACUS}/get/${ABACUS_NS}/${ABACUS_KEY}`).then(r=>r.ok?r.json():Promise.reject()).then(d=>{ if(typeof d.value==="number") showCount(d.value); }).catch(()=>{});
+const HCOL = ["#FF5E7E","#F2A516","#FF8FA3","#FFD166"];
+function floatHearts(x,y,n){
+  if (reduceM) return;
+  for (let i=0;i<n;i++){
+    const h=document.createElement("span"); h.className="fh"; h.textContent="\u2665";
+    h.style.color=HCOL[(Math.random()*HCOL.length)|0];
+    h.style.left=(x-11)+"px"; h.style.top=(y-11)+"px"; h.style.fontSize=(16+Math.random()*16)+"px";
+    heartsLayer.appendChild(h);
+    const dx=(Math.random()-0.5)*120, dy=-(150+Math.random()*160), rot=(Math.random()-0.5)*60;
+    h.animate([{transform:"translate(0,0) scale(.6)",opacity:1},
+      {transform:`translate(${dx*0.5}px,${dy*0.5}px) rotate(${rot*0.5}deg) scale(1.1)`,opacity:1,offset:.5},
+      {transform:`translate(${dx}px,${dy}px) rotate(${rot}deg) scale(.9)`,opacity:0}],
+      {duration:1300+Math.random()*500,easing:"cubic-bezier(.2,.6,.2,1)"}).onfinish=()=>h.remove();
+  }
+}
+likebar.addEventListener("click", () => {
+  showCount(hcount + 1);
+  likebar.classList.add("pop"); setTimeout(()=>likebar.classList.remove("pop"), 200);
+  const r = likebar.getBoundingClientRect(); floatHearts(r.left + r.width/2, r.top, 6);
+  fetch(`${ABACUS}/hit/${ABACUS_NS}/${ABACUS_KEY}`).then(r=>r.ok?r.json():Promise.reject()).then(d=>{ if(typeof d.value==="number") showCount(d.value); }).catch(()=>{});
+});
 </script>
 </body>
 </html>
