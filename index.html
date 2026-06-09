@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Matrix Beneath Everything — Cleve Moler's Impact</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Newsreader:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0E141F; --bg-2:#0A0F18; --panel:#141C2A; --ink:#EAF0F8; --mut:#8FA0B6;
+    --warm:#F2A516; --warm-soft:#5a4420; --cool:#56C7C0; --cool-soft:#234744;
+    --mid:#C9D3E0; --line:#26303f; --faint:rgba(143,160,182,.16);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:"Newsreader",Georgia,serif;color:var(--ink);background:radial-gradient(130% 90% at 70% -10%,#16202f 0%,var(--bg) 50%,var(--bg-2) 100%);min-height:100vh;-webkit-font-smoothing:antialiased;line-height:1.5;}
+  .wrap{max-width:1180px;margin:0 auto;padding:clamp(26px,4vw,52px) clamp(18px,4vw,40px) clamp(40px,6vw,72px);}
+
+  .eyebrow{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--warm);}
+  h1{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:clamp(28px,5.5vw,52px);line-height:1.0;letter-spacing:-.015em;margin-top:10px;}
+  .lede{max-width:64ch;margin-top:16px;font-size:clamp(15px,2vw,18px);color:#C7D2E0;}
+  .lede em{color:var(--warm);font-style:italic;}
+
+  .legend{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--mut);}
+  .legend span{display:inline-flex;align-items:center;gap:7px;}
+  .legend i{width:10px;height:10px;border-radius:50%;display:inline-block;}
+  .legend .w{background:var(--warm);} .legend .m{background:var(--mid);} .legend .c{background:var(--cool);}
+
+  .stage{display:grid;grid-template-columns:1fr 300px;gap:24px;margin-top:clamp(22px,3vw,34px);align-items:start;}
+  @media (max-width:880px){ .stage{grid-template-columns:1fr;} }
+
+  .graphscroll{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:rgba(10,15,24,.5);}
+  .graph{position:relative;min-width:760px;height:clamp(560px,76vh,720px);}
+  .links{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
+  .links path{fill:none;stroke:var(--faint);stroke-width:1.4;transition:stroke .25s,stroke-width .25s,opacity .25s;}
+  .links path.on{stroke:var(--warm);stroke-width:2.2;opacity:.9;}
+
+  .colhd{position:absolute;top:12px;transform:translateX(-50%);font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);white-space:nowrap;}
+
+  .node{position:absolute;transform:translate(-50%,-50%);width:158px;text-align:left;
+    background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:10px 12px;cursor:pointer;
+    transition:border-color .2s,background .2s,transform .12s,box-shadow .2s,opacity .25s;color:var(--ink);}
+  .node:hover{transform:translate(-50%,-50%) scale(1.03);}
+  .node:focus-visible{outline:2px solid var(--warm);outline-offset:3px;}
+  .node .nyr{display:block;font-family:"JetBrains Mono",monospace;font-size:9.5px;letter-spacing:.1em;color:var(--mut);}
+  .node .ntt{display:block;font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:13.5px;line-height:1.15;margin-top:3px;}
+  .node.warm{border-color:var(--warm-soft);} .node.warm .ntt{color:var(--warm);}
+  .node.cool{border-color:var(--cool-soft);} .node.cool .ntt{color:var(--cool);}
+  .node.mid .ntt{color:var(--mid);}
+  .node .pin{position:absolute;left:-5px;top:-5px;width:9px;height:9px;border-radius:50%;background:var(--mut);opacity:.0;transition:opacity .2s;}
+  .node.warm .pin{background:var(--warm);} .node.cool .pin{background:var(--cool);} .node.mid .pin{background:var(--mid);}
+
+  .graph.dim .node{opacity:.28;}
+  .graph.dim .node.lit{opacity:1;}
+  .graph.dim .node.active{opacity:1;box-shadow:0 0 0 1px var(--warm),0 8px 30px rgba(242,165,22,.18);}
+  .graph.dim .node.lit .pin{opacity:1;}
+
+  /* detail panel */
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:20px 20px 22px;position:sticky;top:20px;}
+  .panel .pk{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);}
+  .panel h3{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:21px;line-height:1.1;margin:7px 0 2px;}
+  .panel .meta{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--warm);margin-bottom:12px;}
+  .panel .desc{font-size:15.5px;color:#D2DBE7;}
+  .panel .rel{margin-top:16px;border-top:1px solid var(--line);padding-top:14px;}
+  .panel .rel h4{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);margin-bottom:7px;}
+  .panel .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+  .panel .chip{font-family:"Space Grotesk",sans-serif;font-size:11.5px;padding:4px 9px;border-radius:20px;border:1px solid var(--line);color:var(--mid);cursor:pointer;background:none;transition:border-color .15s,color .15s;}
+  .panel .chip:hover{border-color:var(--warm);color:var(--warm);}
+  .panel .hint{font-style:italic;color:var(--mut);font-size:14px;}
+
+  footer{margin-top:30px;border-top:1px solid var(--line);padding-top:18px;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--mut);line-height:1.8;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Cleve Moler &middot; ~133 papers &middot; cited 15,000+ times</div>
+  <h1>The matrix beneath everything</h1>
+  <p class="lede">Start from the technology you lean on today, then trace each thread back to its root: the matrix work <em>Cleve Moler</em> left behind. Hover or tap any node to light up its lineage.</p>
+
+  <div class="legend">
+    <span><i class="c"></i> Technology today</span>
+    <span><i class="m"></i> What it grew from</span>
+    <span><i class="w"></i> Cleve's foundations</span>
+  </div>
+
+  <div class="stage">
+    <div class="graphscroll">
+      <div class="graph" id="graph">
+        <svg class="links" id="links"></svg>
+        <div class="colhd" id="h0">Foundations · 1965–1984</div>
+        <div class="colhd" id="h1">The bedrock</div>
+        <div class="colhd" id="h2">Today</div>
+      </div>
+    </div>
+
+    <aside class="panel" id="panel">
+      <div class="pk">Selected</div>
+      <h3 id="pTitle">MATLAB</h3>
+      <div class="meta" id="pMeta"></div>
+      <p class="desc" id="pDesc"></p>
+      <div class="rel" id="pRel"></div>
+    </aside>
+  </div>
+
+  <footer>
+    Sources: SIAM · ACM · dblp · Google Scholar.<br>
+    In memory of Cleve Barry Moler, 1939–2026 — who made the matrix easy.
+  </footer>
+</div>
+
+<script>
+const nodes = {
+  // col 0 — foundations
+  qz:     {col:0, kind:"warm", yr:"1973 · with G.W. Stewart", t:"QZ Algorithm", k:"Paper",
+           d:"Solves the generalized eigenvalue problem Ax = λBx for general matrices. Half a century on, it is still the method MATLAB, LAPACK and GSL reach for."},
+  eispack:{col:0, kind:"warm", yr:"1970s", t:"EISPACK", k:"Software library",
+           d:"One of the first portable libraries for matrix eigenvalue and eigenvector problems — a community effort Cleve helped lead."},
+  linpack:{col:0, kind:"warm", yr:"1979 · Dongarra, Bunch, Stewart", t:"LINPACK", k:"Software library",
+           d:"A library for solving dense linear systems. The timing table in its appendix became the benchmark that still ranks the world's supercomputers."},
+  expm:   {col:0, kind:"warm", yr:"1978 · with Van Loan", t:"The Matrix Exponential", k:"Paper",
+           d:"\u201cNineteen Dubious Ways to Compute the Exponential of a Matrix\u201d — the reference for turning a linear system's dynamics into a solution over time."},
+  itref:  {col:0, kind:"warm", yr:"1967", t:"Iterative Refinement", k:"Paper",
+           d:"Improve a computed solution by calculating corrections in higher precision — the seed of today's mixed-precision computing."},
+  svd:    {col:0, kind:"warm", yr:"1960s onward", t:"Championing the SVD", k:"Teaching & demos",
+           d:"Cleve spent decades teaching and demonstrating the singular value decomposition — even the SVD graphics in the first Star Trek film were his."},
+  matlab: {col:0, kind:"warm", yr:"early 1980s", t:"MATLAB", k:"Language",
+           d:"An interactive \u201cmatrix laboratory\u201d that put EISPACK and LINPACK behind a simple, vectorized language — so you could compute without writing Fortran."},
+  // col 1 — bedrock
+  lapack: {col:1, kind:"mid", yr:"successor stack", t:"LAPACK + BLAS", k:"The dense linear-algebra stack",
+           d:"Grew directly out of LINPACK and EISPACK. These routines run silently beneath almost every piece of numerical software on Earth."},
+  bench:  {col:1, kind:"mid", yr:"HPL", t:"The LINPACK Benchmark", k:"Benchmark",
+           d:"Rates a machine by how fast it solves a dense system of equations. Now known as HPL."},
+  array:  {col:1, kind:"mid", yr:"paradigm", t:"Array Programming", k:"Programming style",
+           d:"MATLAB's \u201cthink in whole matrices\u201d style became the template that NumPy, Julia and R all followed."},
+  // col 2 — today
+  ai:     {col:2, kind:"cool", yr:"deep learning", t:"AI & Deep Learning", k:"Today",
+           d:"Every neural-network forward and backward pass is dense matrix multiplication. PyTorch and TensorFlow call BLAS / LAPACK / cuBLAS underneath."},
+  hpc:    {col:2, kind:"cool", yr:"TOP500", t:"Supercomputing", k:"Today",
+           d:"The fastest machines ever built are still ranked by the LINPACK benchmark, twice a year."},
+  control:{col:2, kind:"cool", yr:"Simulink", t:"Control & Simulation", k:"Today",
+           d:"State-space design, stability and modal analysis rest on eigenvalue and matrix-exponential methods. MATLAB/Simulink is the industry tool for aerospace, automotive and robotics."},
+  recsys: {col:2, kind:"cool", yr:"low-rank", t:"Recommenders & Search", k:"Today",
+           d:"Low-rank SVD factorizations power recommendation engines and latent-semantic search — and the low-rank tricks now used to fine-tune large language models."},
+  mixed:  {col:2, kind:"cool", yr:"FP16 / BF16", t:"Mixed-Precision Training", k:"Today",
+           d:"Modern GPUs and TPUs train networks in low precision and refine in higher precision — the same idea Cleve published in 1967."},
+  simeng: {col:2, kind:"cool", yr:"structural / circuits", t:"Finite Element Analysis", k:"Today",
+           d:"Finite-element, circuit and vibration analysis all reduce to factoring and solving very large matrix systems."},
+  scipy:  {col:2, kind:"cool", yr:"data science", t:"Scientific Python", k:"Today",
+           d:"NumPy and SciPy wrap LAPACK and BLAS and inherit MATLAB's array style — the backbone of modern data science."},
+};
+const links = [
+  ["qz","control"],["qz","simeng"],["qz","lapack"],
+  ["eispack","lapack"],
+  ["linpack","lapack"],["linpack","bench"],
+  ["expm","control"],["expm","simeng"],
+  ["itref","mixed"],["itref","lapack"],
+  ["svd","recsys"],["svd","ai"],["svd","scipy"],
+  ["matlab","array"],["matlab","control"],
+  ["lapack","ai"],["lapack","scipy"],["lapack","hpc"],["lapack","simeng"],
+  ["bench","hpc"],
+  ["array","scipy"],["array","ai"],
+];
+
+const graph = document.getElementById("graph");
+const svg = document.getElementById("links");
+const colX = [0.87, 0.5, 0.13];
+const order = { 0:[], 1:[], 2:[] };
+Object.keys(nodes).forEach(id => order[nodes[id].col].push(id));
+
+// build node elements
+const els = {};
+for (const id in nodes){
+  const n = nodes[id];
+  const list = order[n.col], i = list.indexOf(id), m = list.length;
+  const topPct = (m === 1) ? 50 : (10 + (80 * i / (m - 1)));
+  const el = document.createElement("button");
+  el.className = "node " + n.kind;
+  el.style.left = (colX[n.col]*100) + "%";
+  el.style.top = topPct + "%";
+  el.dataset.id = id;
+  el.innerHTML = `<span class="pin"></span><span class="nyr">${n.yr}</span><span class="ntt">${n.t}</span>`;
+  el.addEventListener("mouseenter", () => setActive(id, false));
+  el.addEventListener("focus", () => setActive(id, true));
+  el.addEventListener("click", () => setActive(id, true));
+  graph.appendChild(el);
+  els[id] = el;
+}
+graph.addEventListener("mouseleave", () => setActive(pinned, true));
+document.getElementById("h0").style.left = (colX[0]*100)+"%";
+document.getElementById("h1").style.left = (colX[1]*100)+"%";
+document.getElementById("h2").style.left = (colX[2]*100)+"%";
+
+// link paths
+const paths = links.map(([a,b]) => {
+  const p = document.createElementNS("http://www.w3.org/2000/svg","path");
+  p.dataset.a = a; p.dataset.b = b;
+  svg.appendChild(p);
+  return p;
+});
+function anchorRight(el){ return { x: el.offsetLeft + el.offsetWidth/2, y: el.offsetTop }; }
+function anchorLeft(el){ return { x: el.offsetLeft - el.offsetWidth/2, y: el.offsetTop }; }
+function draw(){
+  svg.setAttribute("width", graph.clientWidth);
+  svg.setAttribute("height", graph.clientHeight);
+  for (const p of paths){
+    const A = els[p.dataset.a], B = els[p.dataset.b];
+    const leftEl = A.offsetLeft <= B.offsetLeft ? A : B;
+    const rightEl = leftEl === A ? B : A;
+    const a = anchorRight(leftEl), b = anchorLeft(rightEl);
+    const cx = (a.x + b.x)/2;
+    p.setAttribute("d", `M ${a.x} ${a.y} C ${cx} ${a.y}, ${cx} ${b.y}, ${b.x} ${b.y}`);
+  }
+}
+
+// adjacency
+const adj = {}; Object.keys(nodes).forEach(id => adj[id] = new Set());
+for (const [a,b] of links){ adj[a].add(b); adj[b].add(a); }
+
+let pinned = "ai";
+function setActive(id, pin){
+  if (pin) pinned = id;
+  graph.classList.add("dim");
+  const lit = adj[id];
+  for (const nid in els){
+    els[nid].classList.toggle("active", nid === id);
+    els[nid].classList.toggle("lit", lit.has(nid));
+  }
+  for (const p of paths){
+    p.classList.toggle("on", p.dataset.a === id || p.dataset.b === id);
+  }
+  renderPanel(id);
+}
+function renderPanel(id){
+  const n = nodes[id];
+  document.querySelector("#panel .pk").textContent = n.k;
+  document.getElementById("pTitle").textContent = n.t;
+  document.getElementById("pMeta").textContent = n.yr;
+  document.getElementById("pDesc").textContent = n.d;
+  const up = links.filter(l => l[1] === id).map(l => l[0]);
+  const down = links.filter(l => l[0] === id).map(l => l[1]);
+  let html = "";
+  if (up.length)   html += `<h4>Builds on</h4><div class="chips">${up.map(chip).join("")}</div>`;
+  if (down.length) html += `<h4>Leads to</h4><div class="chips">${down.map(chip).join("")}</div>`;
+  if (!up.length && !down.length) html += `<p class="hint">A root of the whole tree.</p>`;
+  const rel = document.getElementById("pRel");
+  rel.innerHTML = html;
+  rel.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => { setActive(c.dataset.id, true); els[c.dataset.id].focus(); }));
+}
+const chip = id => `<button class="chip" data-id="${id}">${nodes[id].t}</button>`;
+
+window.addEventListener("resize", draw);
+window.addEventListener("load", () => { draw(); setActive(pinned, true); });
+draw(); setActive(pinned, true);
+</script>
+</body>
+</html>
